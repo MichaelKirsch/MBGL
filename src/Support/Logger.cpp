@@ -2,7 +2,15 @@
 
 #include "Logger.h"
 
-void MBGL::Logger::log(LogType type, std::string to_log,bool silent) {
+
+
+MBGL::Logger::~Logger() {
+    std::cout << "*****PRINTING OUT LOGFILE*****" << std::endl;
+    for(auto& i:m_loggedContent)
+        std::cout<<i<<std::endl;
+}
+
+void MBGL::Logger::log(MBGL::LogType type, std::string to_log, bool silent) {
     std::string message="";
 
     switch (type)
@@ -36,10 +44,4 @@ void MBGL::Logger::log(LogType type, std::string to_log,bool silent) {
     m_loggedContent.emplace_back(message);
     if(!silent)
         std::cout << message << std::endl;
-}
-
-MBGL::Logger::~Logger() {
-    std::cout << "*****PRINTING OUT LOGFILE*****" << std::endl;
-    for(auto& i:m_loggedContent)
-        std::cout<<i<<std::endl;
 }

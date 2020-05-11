@@ -16,7 +16,7 @@ include_directories(libs/glad/)
 include_directories(src)
 include_directories(src/Support)
 include_directories(src/StateMachine)
-include_directories(libs/glm/)
+include_directories(libs/glm)
 find_package(OpenGL REQUIRED)
 
 set(SFML_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/SFML-2.5.1/lib/cmake/SFML")

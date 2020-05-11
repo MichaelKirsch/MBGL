@@ -3,13 +3,20 @@
 #include "WindowManager.h"
 
 void MBGL::WindowManager::init() {
-    m_window.create(sf::VideoMode(700,700),"OpenGLContext",sf::Style::Default);
+    auto perspectiveProjection = glm::perspective(glm::radians(45.f), (float)800/(float)600, 0.1f, 2000.f);
+    sf::ContextSettings settings;
+    settings.depthBits = 24;
+    settings.attributeFlags = settings.Core;
+    settings.antialiasingLevel = 4;
+    settings.minorVersion = 3;
+    settings.majorVersion = 4;
+    m_window.create(sf::VideoMode(700,700),"OpenGLContext",sf::Style::Default,settings);
     m_window.setActive();
+    m_window.requestFocus();
     if(!gladLoadGL())
     {
         throw std::runtime_error("Glad is not loading");
     }
-    glViewport(0, 0, m_window.getSize().x,m_window.getSize().y);
     setClearColor();
     glEnable(GL_DEPTH_TEST);
 }
@@ -33,5 +40,9 @@ float MBGL::WindowManager::swapBuffer(bool debugFrameTime) {
         return std::chrono::duration_cast<std::chrono::milliseconds>(dif).count();
     }
     return 0.f;
+}
+
+void MBGL::WindowManager::refactor() {
+    glViewport(0, 0, m_window.getSize().x,m_window.getSize().y);
 }
 
