@@ -11,6 +11,7 @@ file(GLOB_RECURSE HEADERS "src/*.h")
 
 file(COPY ${HEADERS} "libs/SFML-2.5.1/include/" "libs/glad/" "libs/glm/glm" DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/include)
 file(COPY "libs/SFML-2.5.1/bin/openal32.dll" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY "data"  DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 include_directories(libs/glad/)
 include_directories(src)

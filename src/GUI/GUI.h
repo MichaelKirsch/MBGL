@@ -28,9 +28,13 @@ namespace MBGL{
         {
         public:
             RenderingUnit()=default;
-            void render_test(std::string mes){
+            void add_data(std::string mes){
                 std::cout << "Rendering Test " << mes << std::endl;
             }
+            void display()
+            {
+              std::cout << "FINAL DISPLAY OF GUI" << std::endl;
+            };
         };
 
         struct Widget
@@ -57,7 +61,10 @@ namespace MBGL{
         class GUI : public GameObject,public Hook //GUI will be the base class.
         {
         public:
-            GUI(WindowManager& mgr){};
+            GUI(WindowManager& mgr){
+                auto& window = mgr.getWindow();
+
+            };
             ~GUI(){};
             void init();
 
@@ -67,7 +74,9 @@ namespace MBGL{
                 std::cout << "GUI MAIN RENDER " << std::endl;
                 for(auto& ch:children)
                     ch->render(&r_unit);
+                r_unit.display();
             };
+            Outline main_outline;
         private:
             RenderingUnit r_unit;
         };
@@ -84,7 +93,7 @@ namespace MBGL{
                 m_parent = parent;
             };
             void render(RenderingUnit* r_unit){
-                r_unit->render_test("Unit");
+                r_unit->add_data("Unit");
                 for(auto& ch:children)
                     ch->render(r_unit);
             };
@@ -107,7 +116,7 @@ namespace MBGL{
                 m_parent=parent;
             };
             void render(RenderingUnit *r_unit){
-                r_unit->render_test("Button");
+                r_unit->add_data("Button");
             };
             ~Button()
             {
