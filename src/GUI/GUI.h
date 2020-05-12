@@ -24,6 +24,13 @@ namespace MBGL{
             float height=0.f;
         };
 
+        class RectangleUnit
+        {
+            RectangleUnit(std::string vertex_shader_path, std::string fragment_shader_path);
+            std::vector<float> vbo_data;
+        };
+
+
         class RenderingUnit
         {
         public:
