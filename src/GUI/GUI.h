@@ -7,6 +7,7 @@
 #include "glm/glm.hpp"
 #include "SFML/Graphics.hpp"
 #include "WindowManager.h"
+#include "ShaderLoader.h"
 #include <memory>
 #include <iostream>
 #include <list>
@@ -84,15 +85,26 @@ namespace MBGL {
 
         class RenderingUnit {
         public:
-            RenderingUnit() = default;
+            RenderingUnit(){
+                PROGRAMM = ShaderLoader::createProgram({{"data/shaders/simple_triangle.vert"},{"data/shaders/simple_triangle.frag"}});
 
-            void add_data(std::string mes) {
-                std::cout << "Rendering Test " << mes << std::endl;
-            }
-
-            void display() {
-                std::cout << "FINAL DISPLAY OF GUI" << std::endl;
             };
+
+
+            void add_data(std::vector<glm::vec4> data_to_render) {
+                simple_data.insert(simple_data.end(),data_to_render.begin(),data_to_render.end());
+                std::cout << "added data to vbo" << std::endl;
+            }
+            void display() {
+                // we will need to upload all the data to the gpu and then render it
+
+
+                std::cout << "FINAL DISPLAY OF GUI" << std::endl;
+                simple_data.clear();
+            };
+        private:
+            unsigned int PROGRAMM;
+            std::vector<glm::vec4> simple_data;
         };
 
         struct Widget {
@@ -115,6 +127,14 @@ namespace MBGL {
                 return to_return;
             }
             glm::vec3 m_color = {0.858, 0, 0.823};
+
+            std::vector<glm::vec4> generateGPUData
+                    {
+                        //we need to generate 2 triangles
+
+                    };
+
+
         };
 
         struct Hook {
@@ -174,7 +194,7 @@ namespace MBGL {
             };
 
             void render(RenderingUnit *r_unit) {
-                r_unit->add_data("Unit");
+                //r_unit->add_data("Unit");
                 for (auto &ch:children)
                     ch->render(r_unit);
             };
@@ -196,9 +216,8 @@ namespace MBGL {
                 m_col_pal = parent->m_col_pal;
                 setColor(ColorPalette::Widget_Primary);
             };
-
             void render(RenderingUnit *r_unit) {
-                r_unit->add_data("Button");
+                r_unit->add_data(generateGPUData());
             };
 
             ~Button() {
