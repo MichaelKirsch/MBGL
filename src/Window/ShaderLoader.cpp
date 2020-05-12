@@ -27,9 +27,7 @@ unsigned int ShaderLoader::loadAndCompileShader(std::string obj) {
     if(!valid_name)
         throw std::runtime_error("Shader "+ obj + " not valid");
 
-    std::string path_to_shader_dir = obj;
-    path_to_shader_dir +="/data/shaders/";
-    std::string path_to_shader = path_to_shader_dir+obj;
+    std::string path_to_shader = obj;
     std::ifstream input (path_to_shader);
     std::string shadercode((std::istreambuf_iterator<char>(input)),
                            std::istreambuf_iterator<char>());
