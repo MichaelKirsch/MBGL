@@ -87,24 +87,34 @@ namespace MBGL {
         public:
             RenderingUnit(){
                 PROGRAMM = ShaderLoader::createProgram({{"data/shaders/simple_triangle.vert"},{"data/shaders/simple_triangle.frag"}});
-
+                glGenVertexArrays(1,&VAO);
+                glGenBuffers(1,&VBO);
+                glBindVertexArray(VAO);
+                glBindBuffer(GL_ARRAY_BUFFER,VBO);
+                glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(glm::vec3),(void*)0);
+                glEnableVertexAttribArray(0);
+                glBindVertexArray(0);
             };
 
 
-            void add_data(std::vector<glm::vec4> data_to_render) {
+            void add_data(std::vector<glm::vec3> data_to_render) {
                 simple_data.insert(simple_data.end(),data_to_render.begin(),data_to_render.end());
                 std::cout << "added data to vbo" << std::endl;
             }
             void display() {
                 // we will need to upload all the data to the gpu and then render it
-
-
+                ShaderLoader::useProgramm(PROGRAMM);
+                glBindVertexArray(VAO);
+                glBindBuffer(GL_ARRAY_BUFFER,VBO);
+                glBufferData(GL_ARRAY_BUFFER,simple_data.size()*sizeof(glm::vec3),simple_data.data(),GL_DYNAMIC_DRAW);
+                glDrawArrays(GL_TRIANGLES,0,simple_data.size());
+                glBindVertexArray(0);
                 std::cout << "FINAL DISPLAY OF GUI" << std::endl;
                 simple_data.clear();
             };
         private:
-            unsigned int PROGRAMM;
-            std::vector<glm::vec4> simple_data;
+            unsigned int PROGRAMM,VBO,VAO;
+            std::vector<glm::vec3> simple_data;
         };
 
         struct Widget {
@@ -116,6 +126,7 @@ namespace MBGL {
             RenderingUnit *r_unit;
             ColorPalette* m_col_pal;
             Outline m_outline;
+            float transparency = 1.f;
         protected:
             Outline getOutlineFromOutline(Outline& units_outline, Outline& newOutline)
             {
@@ -128,13 +139,34 @@ namespace MBGL {
             }
             glm::vec3 m_color = {0.858, 0, 0.823};
 
-            std::vector<glm::vec4> generateGPUData
+            float vec3colortofloat(glm::vec3& to_convert)
+            {
+                int x= to_convert.x*255;
+                int y =to_convert.y*255;
+                int z = to_convert.z*255;
+                int w = transparency*255;
+                glm::uint32 buffer=x;
+                buffer = (buffer<<8)+y;
+                buffer = (buffer<<8)+z;
+                buffer = (buffer<<8)+w;
+                return glm::uintBitsToFloat(buffer);
+            }
+
+            std::vector<glm::vec3> generateGPUData()
                     {
+                        auto col = vec3colortofloat(m_color);
                         //we need to generate 2 triangles
-
+                        std::vector<glm::vec3> to_return;
+                        //triangle 1
+                        to_return.emplace_back(glm::vec3(m_outline.x,m_outline.y,col));
+                        to_return.emplace_back(glm::vec3(m_outline.x+m_outline.width,m_outline.y,col));
+                        to_return.emplace_back(glm::vec3(m_outline.x,m_outline.y+m_outline.height,col));
+                        //triangle 2
+                        to_return.emplace_back(glm::vec3(m_outline.x+m_outline.width,m_outline.y,col));
+                        to_return.emplace_back(glm::vec3(m_outline.x+m_outline.width,m_outline.y+m_outline.height,col));
+                        to_return.emplace_back(glm::vec3(m_outline.x,m_outline.y+m_outline.height,col));
+                        return to_return;
                     };
-
-
         };
 
         struct Hook {
@@ -194,7 +226,7 @@ namespace MBGL {
             };
 
             void render(RenderingUnit *r_unit) {
-                //r_unit->add_data("Unit");
+                r_unit->add_data(generateGPUData());
                 for (auto &ch:children)
                     ch->render(r_unit);
             };
