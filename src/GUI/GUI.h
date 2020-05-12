@@ -215,6 +215,8 @@ namespace MBGL {
                 parent->hook(this);
                 m_col_pal = &parent->colorPalette;
                 setColor(ColorPalette::Background); //when the gui is the parent then make it the primary background
+                is_hooked_to_gui= true;
+                m_gui_parent = parent;
             };
 
             Unit(Unit *parent, Outline outline) {
@@ -234,9 +236,13 @@ namespace MBGL {
             ~Unit() {
                 if (m_parent != nullptr)
                     m_parent->unhook(this);
+                if(is_hooked_to_gui)
+                    m_gui_parent->unhook(this);
             };
         private:
+            bool is_hooked_to_gui=false;
             Unit *m_parent = nullptr;
+            GUI* m_gui_parent = nullptr;
         };
 
         class Button : public Widget {

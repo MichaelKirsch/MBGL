@@ -2,7 +2,7 @@
 
 #include "WindowManager.h"
 
-void MBGL::WindowManager::init() {
+void MBGL::WindowManager::init(int width, int height) {
     auto perspectiveProjection = glm::perspective(glm::radians(45.f), (float)800/(float)600, 0.1f, 2000.f);
     sf::ContextSettings settings;
     settings.depthBits = 24;
@@ -10,7 +10,7 @@ void MBGL::WindowManager::init() {
     settings.antialiasingLevel = 4;
     settings.minorVersion = 3;
     settings.majorVersion = 4;
-    m_window.create(sf::VideoMode(700,700),"OpenGLContext",sf::Style::Default,settings);
+    m_window.create(sf::VideoMode(width,height),"OpenGLContext",sf::Style::Default,settings);
     m_window.setActive();
     m_window.requestFocus();
     if(!gladLoadGL())

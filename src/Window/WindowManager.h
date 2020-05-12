@@ -12,7 +12,7 @@ namespace MBGL
 {
     class WindowManager {
     public:
-        void init();
+        void init(int width=1600, int height=900);
         sf::Window& getWindow(){return m_window;};
 
         ~WindowManager() = default;
