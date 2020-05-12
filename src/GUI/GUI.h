@@ -97,9 +97,23 @@ namespace MBGL {
 
         struct Widget {
             virtual void render(RenderingUnit *r_unit) = 0;
-
+            void setColor(ColorPalette::ColorType type){
+                m_color = m_col_pal->getColor(type);
+            };
+            glm::vec3 getColor(){return m_color;};
             RenderingUnit *r_unit;
+            ColorPalette* m_col_pal;
             Outline m_outline;
+        protected:
+            Outline getOutlineFromOutline(Outline& units_outline, Outline& newOutline)
+            {
+                Outline to_return;
+                to_return.height = units_outline.height * newOutline.height;
+                to_return.width = units_outline.width * newOutline.width;
+                to_return.x = units_outline.x + (units_outline.width*newOutline.x);
+                to_return.y = units_outline.y + (units_outline.height*newOutline.y);
+                return to_return;
+            }
             glm::vec3 m_color = {0.858, 0, 0.823};
         };
 
@@ -122,7 +136,6 @@ namespace MBGL {
         public:
             GUI(WindowManager &mgr) {
                 auto &window = mgr.getWindow();
-
             };
 
             ~GUI() {};
@@ -146,14 +159,18 @@ namespace MBGL {
         class Unit : public Widget, public Hook {
         public:
             Unit(GUI *parent, Outline outline) {
-                m_outline = outline;
+                m_outline = outline; //this sets the size according to the window;
                 parent->hook(this);
+                m_col_pal = &parent->colorPalette;
+                setColor(ColorPalette::Background); //when the gui is the parent then make it the primary background
             };
 
             Unit(Unit *parent, Outline outline) {
                 parent->hook(this);
-                m_outline = outline;
+                m_outline = getOutlineFromOutline(parent->m_outline,outline);
                 m_parent = parent;
+                m_col_pal = parent->m_col_pal;//when a unit is the parent then make it the secondary background
+                setColor(ColorPalette::SecondaryBackground);
             };
 
             void render(RenderingUnit *r_unit) {
@@ -173,9 +190,11 @@ namespace MBGL {
         class Button : public Widget {
         public:
             Button(Unit *parent, Outline outline) {
-                m_outline = outline;
+                m_outline = getOutlineFromOutline(parent->m_outline,outline);
                 parent->hook(this);
                 m_parent = parent;
+                m_col_pal = parent->m_col_pal;
+                setColor(ColorPalette::Widget_Primary);
             };
 
             void render(RenderingUnit *r_unit) {
