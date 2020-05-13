@@ -99,7 +99,7 @@ namespace MBGL {
 
             void add_data(std::vector<glm::vec3> data_to_render) {
                 simple_data.insert(simple_data.end(),data_to_render.begin(),data_to_render.end());
-                std::cout << "added data to vbo" << std::endl;
+                //std::cout << "added data to vbo" << std::endl;
             }
             void display() {
                 // we will need to upload all the data to the gpu and then render it
@@ -109,7 +109,7 @@ namespace MBGL {
                 glBufferData(GL_ARRAY_BUFFER,simple_data.size()*sizeof(glm::vec3),simple_data.data(),GL_DYNAMIC_DRAW);
                 glDrawArrays(GL_TRIANGLES,0,simple_data.size());
                 glBindVertexArray(0);
-                std::cout << "FINAL DISPLAY OF GUI" << std::endl;
+                //std::cout << "FINAL DISPLAY OF GUI" << std::endl;
                 simple_data.clear();
             };
         private:
@@ -171,12 +171,12 @@ namespace MBGL {
 
         struct Hook {
             void hook(Widget *to_hook) {
-                std::cout << "HOOK " << std::endl;
+                //std::cout << "HOOK " << std::endl;
                 children.push_back(to_hook);
             };
 
             void unhook(Widget *to_unhook) {
-                std::cout << "UNHOOK " << std::endl;
+                //std::cout << "UNHOOK " << std::endl;
                 children.remove(to_unhook);
             }
 
@@ -197,7 +197,7 @@ namespace MBGL {
             void update() {};
 
             void render() {
-                std::cout << "GUI MAIN RENDER " << std::endl;
+                //std::cout << "GUI MAIN RENDER " << std::endl;
                 for (auto &ch:children)
                     ch->render(&r_unit);
                 r_unit.display();
@@ -222,15 +222,18 @@ namespace MBGL {
             Unit(Unit *parent, Outline outline) {
                 parent->hook(this);
                 m_outline = getOutlineFromOutline(parent->m_outline,outline);
+                originalOutline = outline;
                 m_parent = parent;
                 m_col_pal = parent->m_col_pal;//when a unit is the parent then make it the secondary background
                 setColor(ColorPalette::SecondaryBackground);
             };
 
             void render(RenderingUnit *r_unit) {
-                r_unit->add_data(generateGPUData());
                 for (auto &ch:children)
                     ch->render(r_unit);
+                if(!is_hooked_to_gui)
+                    m_outline = getOutlineFromOutline(m_parent->m_outline,originalOutline);
+                r_unit->add_data(generateGPUData());
             };
 
             ~Unit() {
@@ -240,6 +243,7 @@ namespace MBGL {
                     m_gui_parent->unhook(this);
             };
         private:
+            Outline originalOutline;
             bool is_hooked_to_gui=false;
             Unit *m_parent = nullptr;
             GUI* m_gui_parent = nullptr;

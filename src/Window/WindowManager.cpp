@@ -5,6 +5,11 @@
 void MBGL::WindowManager::init(int width, int height) {
     auto perspectiveProjection = glm::perspective(glm::radians(45.f), (float)800/(float)600, 0.1f, 2000.f);
     sf::ContextSettings settings;
+    m_mouse.setPosition({0,0});
+    if(sf::Keyboard::isKeyPressed(sf::Keyboard::B))
+    {
+
+    }
     settings.depthBits = 24;
     settings.attributeFlags = settings.Core;
     settings.antialiasingLevel = 4;
