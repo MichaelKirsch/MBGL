@@ -74,12 +74,14 @@ namespace MBGL {
             float y = 0.f;
             float width = 0.f;
             float height = 0.f;
-        };
 
-        class RectangleUnit {
-            RectangleUnit(std::string vertex_shader_path, std::string fragment_shader_path);
+            bool AABB_point(glm::vec2 point)
+            {
+                return (point.x >= x && point.x <= x+width) &&
+                       (point.y >= y && point.y <= y+height);
+            }
 
-            std::vector<float> vbo_data;
+
         };
 
 
@@ -187,7 +189,7 @@ namespace MBGL {
         {
         public:
             GUI(WindowManager &mgr) {
-                auto &window = mgr.getWindow();
+                m_mgr=&mgr;
             };
 
             ~GUI() {};
@@ -203,9 +205,15 @@ namespace MBGL {
                 r_unit.display();
             };
             Outline main_outline;
+
+            glm::fvec2 pixelToPercent(int x,int y){
+                return {(1.f/m_mgr->getWindow().getSize().x)*x,1.0-((1.f/m_mgr->getWindow().getSize().y)*y)};
+            }
+
             ColorPalette colorPalette;
         private:
             RenderingUnit r_unit;
+            WindowManager* m_mgr;
         };
 
         class Unit : public Widget, public Hook {
@@ -252,13 +260,14 @@ namespace MBGL {
         class Button : public Widget {
         public:
             Button(Unit *parent, Outline outline) {
-                m_outline = getOutlineFromOutline(parent->m_outline,outline);
                 parent->hook(this);
                 m_parent = parent;
+                originalOutline = outline;
                 m_col_pal = parent->m_col_pal;
                 setColor(ColorPalette::Widget_Primary);
             };
             void render(RenderingUnit *r_unit) {
+                m_outline = getOutlineFromOutline(m_parent->m_outline,originalOutline);
                 r_unit->add_data(generateGPUData());
             };
 
@@ -269,6 +278,7 @@ namespace MBGL {
 
         private:
             Unit *m_parent = nullptr;
+            Outline originalOutline;
         };
 
     }
