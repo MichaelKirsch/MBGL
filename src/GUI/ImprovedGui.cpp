@@ -83,8 +83,13 @@ void MBGL::GUI::Widget::update(glm::vec2 mouse_pos) {
 
 void MBGL::GUI::GUI::update(sf::Mouse &mouse) {
     auto pos = mouse.getPosition(m_mgr->getWindow());
-    for(auto& e:allElements)
+    for(auto& e:hooked_children)
     {
         e->update(pixelToPercent(pos));
     }
 }
+
+void MBGL::GUI::GUI::generateData(MBGL::GUI::RenderingUnit *r_unit) {
+ //empty
+}
+

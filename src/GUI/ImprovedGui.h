@@ -57,7 +57,6 @@ namespace MBGL
             bool AABB_outline(Outline& outline);
         };
 
-
         class RenderingUnit {
         public:
             RenderingUnit(){
@@ -74,7 +73,6 @@ namespace MBGL
 
             void add_data(std::vector<glm::vec3> data_to_render) {
                 simple_data.insert(simple_data.end(),data_to_render.begin(),data_to_render.end());
-                //std::cout << "added data to vbo" << std::endl;
             }
             void display() {
                 // we will need to upload all the data to the gpu and then render it
@@ -133,154 +131,76 @@ namespace MBGL
             bool has_unit_as_parent = false;
             Outline global_outline;
             Outline private_outline;
+            ColorPalette* m_palette;
             bool mouse_is_over=false;
         protected:
-
             float transparency = 1.f;
             float vec3colortofloat(glm::vec3& to_convert);
             std::vector<glm::vec3> generateGPUData();
             Outline getOutlineFromOutline(Outline& units_outline, Outline& newOutline);
             fillColor m_color={1, 0.078, 0.925}; //make it pink to see elements that need their color set
-            ColorPalette* m_palette;
             fillColor primaryColor;
             fillColor secondaryColor;
         };
 
-        struct Unit : public Widget
+        struct Parent : public Widget
         {
-            Unit(ColorPalette* plt, Outline outl):Widget(plt,outl){
-                setPrimaryColor(Background);
-                setSecondaryColor(SecondaryBackground);
-                global_outline = private_outline;
+            Parent(ColorPalette* plt, Outline outl):Widget(plt,outl){};
+            virtual ~Parent() =default;
+            void hook(Widget* to_hook){
+                hooked_children.push_back(to_hook);
             };
-            Unit(ColorPalette* plt,Outline outl,Unit* otherUnit):Widget(plt,outl){
-                global_outline = getOutlineFromOutline(otherUnit->global_outline,private_outline);
-                setPrimaryColor(Background);
-                setSecondaryColor(SecondaryBackground);
-                m_parent = otherUnit;
-                has_unit_as_parent = true;
-                otherUnit->attachChild(this);
+            void unhook(Widget* to_unhook){
+                std::cout << "Unhooked" << std::endl;
+                hooked_children.remove(to_unhook);
             };
-            ~Unit(){
-            }
-            virtual void generateData(RenderingUnit *r_unit) {
+            std::list<Widget*> hooked_children;
+        };
 
-                if(has_unit_as_parent)
-                    global_outline = getOutlineFromOutline(m_parent->global_outline,private_outline);
-
-                for(auto& ch:m_children)
-                    ch->generateData(r_unit);
-                r_unit->add_data(generateGPUData());
-            }
-
-            void attachChild(Widget* ch)
+        struct Child : public Widget
+        {
+            Child(Parent* parent,ColorPalette* plt, Outline Outline):Widget(plt,Outline){
+                hook_into_parent(parent);
+            };
+            virtual ~Child(){
+                unhook_from_parent();
+            };
+            void hook_into_parent(Parent* prt)
             {
-                m_children.emplace_back(ch);
+                //hooked_at_this_parent->unhook(this);
+                prt->hook(this);
+                hooked_at_this_parent = prt;
             }
 
-
+            void unhook_from_parent()
+            {
+                hooked_at_this_parent->unhook(this);
+            }
 
         protected:
-            Unit* m_parent = nullptr;
-            std::vector<Widget*> m_children;
+            Parent* hooked_at_this_parent= nullptr;
         };
 
-        class CanHookToUnit
-        {
-        protected:
-            void attach(Unit* new_parent){m_parent = new_parent;};
-            Unit* m_parent = nullptr;
-        };
-
-
-        struct Button : public Widget, CanHookToUnit
-        {
-            Button(ColorPalette* plt,Outline outl):Widget(plt,outl){
-                global_outline = private_outline;
-                setColorInBeginning();
-            };
-            Button(ColorPalette* plt,Outline outl,Unit* new_parent):Widget(plt,outl){
-                attach(new_parent);
-                setColorInBeginning();
-                global_outline = getOutlineFromOutline(new_parent->global_outline,private_outline);
-                new_parent->attachChild(this);
-                has_unit_as_parent = true;
-            };
-            ~Button()
-            {
-            }
-            void generateData(RenderingUnit *r_unit) {
-                if(has_unit_as_parent)
-                    global_outline = getOutlineFromOutline(m_parent->global_outline,private_outline);
-                r_unit->add_data(generateGPUData());
-            }
-
-            bool is_clicked = false;
-
-            void update(glm::vec2 mouse_pos) {
-                Widget::update(mouse_pos);
-                if(mouse_is_over) {
-                    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                        is_clicked = true;
-                    } else {
-                        is_clicked = false;
-                    }
-                }
-            }
-
-        private:
-            void setColorInBeginning()
-            {
-                primaryColor = m_palette->getColor(Widget_Primary);
-                secondaryColor = m_palette->getColor(Widget_Secondary);
-            }
-        };
-
-
-        class GUI
+        class GUI : public Parent
         {
         public:
-            GUI(WindowManager& mgr, ColorPalette& palette){
-                m_palette = &palette;
+            GUI(WindowManager& mgr, ColorPalette& palette): Parent(&palette,{0.0,0.0,1.0,1.0}){
+                global_outline = private_outline;
                 m_mgr = &mgr;
             };
             //GUI class will be the main funktion for all gui elements
-            ~GUI(){};
+            ~GUI(){
+                std::cout << "Final Close of GUI" << std::endl;
+            };
+
+            void generateData(RenderingUnit *r_unit) override;
 
             void update(sf::Mouse& mouse);
 
-            Unit* generateNewUnit(Outline outline){
-                auto* t = new Unit(m_palette,outline);
-                allElements.emplace_back(t);
-                return t;
-            };
-            Unit* generateNewUnit(Unit*)
-            {
-
-            };
-            Button* generateNewButton(Outline outline)
-            {
-                auto* t = new Button(m_palette,outline);
-                allElements.emplace_back(t);
-                return t;
-            };
-            Button* generateNewButton(Unit* unt,Outline outline)
-            {
-                auto* t = new Button(m_palette,outline,unt);
-                allElements.emplace_back(t);
-                return t;
-            };
-
             void render()
             {
-                for(auto& el:allElements)
-                {
-                    if(el->please_delete)
-                        allElements.remove(el);
-                    if(!el->has_unit_as_parent)
-                        el->generateData(&r_unit);
-                }
-
+                for(auto& el:hooked_children)
+                    el->generateData(&r_unit);
                 r_unit.display();
             };
 
@@ -288,11 +208,73 @@ namespace MBGL
             glm::fvec2 pixelToPercent(sf::Vector2i pos){return {(1.f/m_mgr->getWindow().getSize().x)*pos.x,1.0-((1.f/m_mgr->getWindow().getSize().y)*pos.y)};};
 
         private:
-            ColorPalette* m_palette;
             WindowManager* m_mgr;
             RenderingUnit r_unit;
-            std::list<std::unique_ptr<Widget>> allElements;
         };
+
+        struct Unit : public Parent
+        {
+            Unit(GUI* par,Outline outl) : Parent(par->m_palette,outl){
+                setStartColor();
+                m_parent = par;
+                m_parent->hook(this);
+            };
+            Unit(Unit* par, Outline outl) : Parent(par->m_palette,outl){
+                setStartColor();
+                m_parent = par;
+                m_parent->hook(this);
+            }
+            ~Unit()
+            {
+                m_parent->unhook(this);
+            }
+            void generateData(RenderingUnit *r_unit) override {
+                global_outline = getOutlineFromOutline(m_parent->global_outline,private_outline);
+                for(auto& el:hooked_children)
+                    el->generateData(r_unit);
+                r_unit->add_data(generateGPUData());
+
+
+
+            }
+
+            void update(glm::vec2 mouse_pos) override {
+                Widget::update(mouse_pos);
+                for(auto& e:hooked_children)
+                {
+                    e->update(mouse_pos);
+                }
+            }
+
+        private:
+            void setStartColor()
+            {
+                setPrimaryColor(Background);
+                setSecondaryColor(SecondaryBackground);
+            }
+            Parent* m_parent= nullptr;
+        };
+
+        struct Button : public Child
+        {
+            Button(Parent* prt, Outline outl):Child(prt,prt->m_palette,outl){
+                global_outline = getOutlineFromOutline(hooked_at_this_parent->global_outline,private_outline);
+                setPrimaryColor(Widget_Primary);
+                setSecondaryColor(Widget_Secondary);
+            };
+
+            void generateData(RenderingUnit *r_unit) override {
+                global_outline = getOutlineFromOutline(hooked_at_this_parent->global_outline,private_outline);
+                r_unit->add_data(generateGPUData());
+            }
+
+            void update(glm::vec2 mouse_pos) override {
+                Widget::update(mouse_pos);
+            }
+
+        };
+
+
     }
 }
 
