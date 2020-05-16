@@ -80,6 +80,21 @@ void MBGL::GUI::Widget::update(glm::vec2 mouse_pos) {
         m_color = primaryColor;
 }
 
+std::vector<glm::vec3> MBGL::GUI::Widget::generateGPUData(MBGL::GUI::Outline outl, MBGL::GUI::fillColor color) {
+        auto col = vec3colortofloat(color);
+        //we need to generate 2 triangles
+        std::vector<glm::vec3> to_return;
+        //triangle 1
+        to_return.emplace_back(glm::vec3(outl.x,outl.y,col));
+        to_return.emplace_back(glm::vec3(outl.x+outl.width,outl.y,col));
+        to_return.emplace_back(glm::vec3(outl.x,outl.y+outl.height,col));
+        //triangle 2
+        to_return.emplace_back(glm::vec3(outl.x+outl.width,outl.y,col));
+        to_return.emplace_back(glm::vec3(outl.x+outl.width,outl.y+outl.height,col));
+        to_return.emplace_back(glm::vec3(outl.x,outl.y+outl.height,col));
+        return to_return;
+}
+
 
 void MBGL::GUI::GUI::update(sf::Mouse &mouse) {
     auto pos = mouse.getPosition(m_mgr->getWindow());
