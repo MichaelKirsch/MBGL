@@ -85,7 +85,7 @@ void MBGL::GUI::GUI::update(sf::Mouse &mouse) {
     auto pos = mouse.getPosition(m_mgr->getWindow());
     for(auto& e:hooked_children)
     {
-        e->update(pixelToPercent(pos));
+        e->update(pixelToPercent(m_mgr,pos));
     }
 }
 

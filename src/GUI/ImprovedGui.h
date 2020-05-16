@@ -28,6 +28,9 @@ namespace MBGL
             Text_Inactive
         };
 
+        glm::fvec2 pixelToPercent(WindowManager* m_mgr,int x,int y){return {(1.f/m_mgr->getWindow().getSize().x)*x,1.0-((1.f/m_mgr->getWindow().getSize().y)*y)};};
+        glm::fvec2 pixelToPercent(WindowManager* m_mgr,sf::Vector2i pos){return {(1.f/m_mgr->getWindow().getSize().x)*pos.x,1.0-((1.f/m_mgr->getWindow().getSize().y)*pos.y)};};
+
         typedef glm::vec3 fillColor;
 
         struct ColorPalette {
@@ -204,55 +207,11 @@ namespace MBGL
                 r_unit.display();
             };
 
-            glm::fvec2 pixelToPercent(int x,int y){return {(1.f/m_mgr->getWindow().getSize().x)*x,1.0-((1.f/m_mgr->getWindow().getSize().y)*y)};};
-            glm::fvec2 pixelToPercent(sf::Vector2i pos){return {(1.f/m_mgr->getWindow().getSize().x)*pos.x,1.0-((1.f/m_mgr->getWindow().getSize().y)*pos.y)};};
+
 
         private:
             WindowManager* m_mgr;
             RenderingUnit r_unit;
-        };
-
-        struct Unit : public Parent
-        {
-            Unit(GUI* par,Outline outl) : Parent(par->m_palette,outl){
-                setStartColor();
-                m_parent = par;
-                m_parent->hook(this);
-            };
-            Unit(Unit* par, Outline outl) : Parent(par->m_palette,outl){
-                setStartColor();
-                m_parent = par;
-                m_parent->hook(this);
-            }
-            ~Unit()
-            {
-                m_parent->unhook(this);
-            }
-            void generateData(RenderingUnit *r_unit) override {
-                global_outline = getOutlineFromOutline(m_parent->global_outline,private_outline);
-                for(auto& el:hooked_children)
-                    el->generateData(r_unit);
-                r_unit->add_data(generateGPUData());
-
-
-
-            }
-
-            void update(glm::vec2 mouse_pos) override {
-                Widget::update(mouse_pos);
-                for(auto& e:hooked_children)
-                {
-                    e->update(mouse_pos);
-                }
-            }
-
-        private:
-            void setStartColor()
-            {
-                setPrimaryColor(Background);
-                setSecondaryColor(SecondaryBackground);
-            }
-            Parent* m_parent= nullptr;
         };
 
         struct Button : public Child
@@ -273,6 +232,72 @@ namespace MBGL
             }
 
         };
+
+
+        struct Unit : public Parent
+        {
+            Unit(GUI* par,Outline outl) : Parent(par->m_palette,outl){
+                generateMovingButton();
+                setStartColor();
+                m_parent = par;
+                m_parent->hook(this);
+                show_moving_button = true;
+            };
+            Unit(Unit* par, Outline outl) : Parent(par->m_palette,outl){
+                generateMovingButton();
+                setStartColor();
+                m_parent = par;
+                m_parent->hook(this);
+            }
+            ~Unit()
+            {
+                delete moving_button;
+                m_parent->unhook(this);
+            }
+            void generateData(RenderingUnit *r_unit) override {
+                global_outline = getOutlineFromOutline(m_parent->global_outline,private_outline);
+                for(auto& el:hooked_children)
+                    el->generateData(r_unit);
+                r_unit->add_data(generateGPUData());
+
+            }
+            void update(glm::vec2 mouse_pos) override {
+                Widget::update(mouse_pos);
+                for(auto& e:hooked_children)
+                {
+                    e->update(mouse_pos);
+                }
+                if(show_moving_button)
+                {
+
+                }
+                if(moveable)
+                    if(mouse_is_over&&sf::Mouse::isButtonPressed(sf::Mouse::Right)) {
+                        private_outline.x = mouse_pos.x-(private_outline.width/2);
+                        private_outline.y = mouse_pos.y-(private_outline.height/2);
+                    }
+
+            }
+            bool show_moving_button=false;
+        private:
+            void setStartColor()
+            {
+                setPrimaryColor(Background);
+                setSecondaryColor(SecondaryBackground);
+            }
+
+            void generateMovingButton()
+            {
+                moving_button = new Button(this,{0.85,0.0,0.15,0.15});
+                moving_button->setPrimaryColor(SecondaryBackground);
+            }
+
+            Parent* m_parent= nullptr;
+            Button* moving_button;
+        };
+
+
+
 
 
     }
