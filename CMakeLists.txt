@@ -24,6 +24,7 @@ find_package(OpenGL REQUIRED)
 
 set(SFML_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/SFML-2.5.1/lib/cmake/SFML")
 set(SFML_STATIC_LIBRARIES TRUE)
+set(SFML_USE_STATIC_STD_LIBS TRUE)
 find_package(SFML COMPONENTS system window graphics network audio REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES} libs/glad/glad.c )
