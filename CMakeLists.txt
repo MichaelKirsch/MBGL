@@ -27,7 +27,7 @@ set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_USE_STATIC_STD_LIBS TRUE)
 find_package(SFML COMPONENTS system window graphics network audio REQUIRED)
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES} libs/glad/glad.c )
+add_library(${PROJECT_NAME} SHARED ${SOURCES} libs/glad/glad.c src/Support/TextAndFont.cpp src/Support/TextAndFont.h)
 
 target_link_libraries(${PROJECT_NAME} sfml-system sfml-window sfml-graphics sfml-network sfml-audio ${OPENGL_LIBRARIES})
 

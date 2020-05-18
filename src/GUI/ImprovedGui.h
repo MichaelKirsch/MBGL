@@ -38,6 +38,16 @@ namespace MBGL {
 
         typedef glm::vec3 fillColor;
 
+        struct Font
+        {
+            Font();
+            bool loadFromFile(std::string file_path);
+
+        private:
+            sf::Font m_font;
+        };
+
+
         struct ColorPalette {
 
             ColorPalette() = default;
@@ -256,14 +266,15 @@ namespace MBGL {
         struct FreeSlider : public Child {
             FreeSlider(Parent *prt, Outline outl) : Child(prt, prt->m_palette, outl) {
                 global_outline = getOutlineFromOutline(hooked_at_this_parent->global_outline, private_outline);
-                setPrimaryColor(Warning);
-                setSecondaryColor(Error);
+                setPrimaryColor(Widget_Primary);
+                setSecondaryColor(Widget_Secondary);
+                value   = 0.f;
             }
 
             void generateData(RenderingUnit *r_unit) override {
                 global_outline = getOutlineFromOutline(hooked_at_this_parent->global_outline, private_outline);
-                auto position_slide_x = (value*global_outline.width)+0.5*slide.width;
-                slide.x = global_outline.x-position_slide_x;
+                auto position_slide_x = (value*global_outline.width)-0.5*slide.width;
+                slide.x = global_outline.x+position_slide_x;
                 slide.y = global_outline.y;
                 slide.width = global_outline.width*0.1f;
                 slide.height = global_outline.height;
@@ -275,10 +286,17 @@ namespace MBGL {
 
             void update(glm::vec2 mouse_pos) override {
                 Widget::update(mouse_pos);
-                if (mouse_is_over && sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-                    auto max = global_outline.width;
-                    auto zeroed_out = global_outline.x-mouse_pos.x;
-                    value = -1.f*((1.0f/max)*zeroed_out);
+                if (mouse_is_over ) {
+                        slider_color = m_palette->getColor(Text_Primary);
+                        if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                        {
+                            auto max = global_outline.width;
+                            auto zeroed_out = global_outline.x-mouse_pos.x;
+                            value = -1.f*((1.0f/max)*zeroed_out);
+                        }
+                } else
+                {
+                    slider_color = m_palette->getColor(Text_Inactive);
                 }
             }
 
@@ -293,6 +311,8 @@ namespace MBGL {
         private:
             float value = 0.f;
             Outline slide, button;
+            fillColor slider_color;
+            fillColor buttom_color;
         };
 
 
