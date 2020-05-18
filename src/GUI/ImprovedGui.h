@@ -209,7 +209,7 @@ namespace MBGL {
 
         class GUI : public Parent {
         public:
-            GUI(WindowManager &mgr, ColorPalette &palette) : Parent(&palette, {0.0, 0.0, 1.0, 1.0}) {
+            GUI(WindowManager &mgr, ColorPalette &palette) : Parent(&palette,{0.0, 0.0, 1.0, 1.0}) {
                 global_outline = private_outline;
                 m_mgr = &mgr;
             };
@@ -261,21 +261,24 @@ namespace MBGL {
             }
 
             void generateData(RenderingUnit *r_unit) override {
-                r_unit->add_data(generateGPUData());
-                r_unit->add_data(generateGPUData(slide, m_palette->getColor(Text_Primary)));
+                global_outline = getOutlineFromOutline(hooked_at_this_parent->global_outline, private_outline);
+                auto position_slide_x = (value*global_outline.width)+0.5*slide.width;
+                slide.x = global_outline.x-position_slide_x;
+                slide.y = global_outline.y;
+                slide.width = global_outline.width*0.1f;
+                slide.height = global_outline.height;
                 r_unit->add_data(generateGPUData(button, m_palette->getColor(Text_Inactive)));
+                r_unit->add_data(generateGPUData(slide, m_palette->getColor(Text_Primary)));
+                r_unit->add_data(generateGPUData());
+
             }
 
             void update(glm::vec2 mouse_pos) override {
                 Widget::update(mouse_pos);
                 if (mouse_is_over && sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
                     auto max = global_outline.width;
-                    auto min = global_outline.x;
                     auto zeroed_out = global_outline.x-mouse_pos.x;
-
                     value = -1.f*((1.0f/max)*zeroed_out);
-
-                    std::cout << "Value: " << std::to_string(value)<< std::endl;
                 }
             }
 
@@ -353,6 +356,12 @@ namespace MBGL {
             Parent *m_parent = nullptr;
             Button *moving_button;
         };
+
+        class SimpleText : public Child
+        {
+
+        };
+
     }
 }
 
